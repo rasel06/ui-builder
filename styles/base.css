@@ -1,0 +1,8 @@
+/* Rules ui-builder's tables and grids rely on. */
+
+/* Every badge in a data table or grid is the same 12px, whatever the row density or the class
+   string a config gave it. Density changes a badge's padding, never its type size. */
+:is(table, [data-grid-card]) [data-slot='badge'] {
+    font-size: 0.75rem;
+    line-height: 1rem;
+}

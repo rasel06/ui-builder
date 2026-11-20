@@ -1,0 +1,17 @@
+/*
+ * For a host that runs Tailwind v4 (quick-pos and every Laravel + Vue starter): import this AFTER
+ * `@import 'tailwindcss'` in the host's CSS entry. It points the host's Tailwind at ui-builder's
+ * source, so every class is built once, by one Tailwind, in one layer order (dark: and hover:
+ * variants then always beat their base class). A host without Tailwind loads dist/ui-builder.css instead.
+ *
+ * Dark mode is the `.dark` class on <html>.
+ */
+@import 'tw-animate-css';
+@import './tokens.css';
+@import './transitions.css';
+@import './palettes.css';
+@import './base.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@source '../src';

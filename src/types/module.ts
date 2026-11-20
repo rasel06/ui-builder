@@ -1,0 +1,900 @@
+import type { DialogWidthToken, SizeValue } from '../utils/sizing';
+
+/**
+ * A component the framework package can render (a Vue component in @rasel/ui-builder, a React one later).
+ * The framework package fills this in by augmenting `UiFrameworkTypes`; core itself never names a framework.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface UiFrameworkTypes {}
+export type UiComponent = UiFrameworkTypes extends { component: infer C } ? C : unknown;
+
+export type { SizeToken, SizeValue, DialogWidthToken } from '../utils/sizing';
+
+export interface ThemeConfig {
+    name?: string;
+    /** Designed on a fixed dark ground (white text everywhere): the app renders it in dark mode whatever the appearance choice. */
+    darkOnly?: boolean;
+    appContentBackground?: string;
+    appContentBackdrop?: string;
+    backdropDecorations?: string;
+    cardBackground: string;
+    cardBorder: string;
+    headerBackground: string;
+    headerText: string;
+    primaryButton: string;
+    errorText?: string;
+    errorBorder?: string;
+    errorBackground?: string;
+    errorBorderColor?: string;
+    secondaryButton: string;
+    inputBackground: string;
+    inputBorder: string;
+    inputText: string;
+    labelText?: string;
+    paginationButton: string;
+    paginationActiveButton: string;
+    paginationText: string;
+    badgeBackground: string;
+    badgeText: string;
+    tableBackground: string;
+    tableBorder: string;
+    tableHeaderBackground: string;
+    tableHeaderText: string;
+    tableRowHover: string;
+    tableRowSelected?: string;
+    tableRowBorder: string;
+    tableTextPrimary: string;
+    tableTextSecondary: string;
+    tableToolbarBackground: string;
+    tableToolbarBorder: string;
+    tableToolbarText?: string;
+    tableToolbarSeparator?: string;
+    tableIconActive?: string;
+    tableIconInactive?: string;
+    tableMenuBackground?: string;
+    tableMenuBorder?: string;
+    tableMenuText?: string;
+    loadingText?: string;
+    checkbox?: string;
+    primaryText?: string;
+}
+
+export interface TableTheme {
+    tableBackground: string;
+    tableBorder: string;
+    headerBackground: string;
+    headerText: string;
+    rowHover: string;
+    rowSelected?: string;
+    rowBorder: string;
+    textPrimary: string;
+    textSecondary: string;
+    toolbarBackground: string;
+    toolbarBorder: string;
+    toolbarText?: string;
+    toolbarSeparator?: string;
+    iconActive?: string;
+    iconInactive?: string;
+    menuBackground?: string;
+    menuBorder?: string;
+    menuText?: string;
+    primaryButton?: string; // Added to support themed switches
+    secondaryButton?: string;
+    checkbox?: string;
+}
+
+// `json` is opt-in (see ExportConfig.json); the other four are on by default.
+export type ExportFormat = 'pdf' | 'excel' | 'csv' | 'json' | 'print';
+
+export interface ExportUiConfig {
+    formats?: ExportFormat[];
+    position?: 'table' | 'filterBar';
+    align?: 'left' | 'right';
+    asGroup?: boolean;
+    asDropdown?: boolean;
+    printPosition?: 'first' | 'last';
+    activeOnlyOnData?: boolean;
+    indentColumns?: string[];
+    indentCondition?: ((row: any, col?: any) => boolean | number) | undefined;
+}
+
+export interface ExportDocumentConfig {
+    company?: string;
+    title?: string; // Default: "[ModuleName] List" — only set to override
+    subtitle?: string;
+    showMeta?: boolean;
+    showFilters?: boolean;
+    themeColor?: string;
+    size?: 'a3' | 'a4' | 'a5' | 'letter' | 'legal';
+    orientation?: 'portrait' | 'landscape';
+    margin?:
+        | number
+        | { top?: number; bottom?: number; left?: number; right?: number };
+    cellPadding?: number;
+    showSerial?: boolean;
+    repeatHeader?: boolean;
+    meta?: Record<string, string>;
+    logo?: string;
+}
+
+export interface ExportConfig {
+    pdf?: boolean; // Talk to backend: default true. Set to false to hide PDF export button.
+    excel?: boolean; // Talk to backend: default true. Set to false to hide Excel export button.
+    csv?: boolean; // Talk to backend: default true. Set to false to hide CSV export button.
+    json?: boolean; // Machine-readable export; default false, unlike the rest — opt in with json: true
+    print?: boolean; // Talk to backend: default true. Set to false to hide Print button.
+    showAsGroup?: boolean; // default: true (show as a grouped block, or individual buttons)
+    enabled?: boolean; // default: true (whether the frontend toolbar exports are enabled overall)
+    position?: 'table' | 'filterBar'; // default: 'table' (renders in table toolbar or next to filters)
+    showAsDropdown?: boolean; // default: true when position is filterBar (renders as a filter-style dropdown or buttons)
+    companyName?: string; // Company name displayed in the header. Default: "Quick POS"
+    title?: string; // Custom main title. Default: "[ModuleName] List"
+    subtitle?: string; // Custom subtitle. Default: "Exported Document"
+    showMeta?: boolean; // Show metadata (Date, Generated By, Total Records). Default: true
+    showFilters?: boolean; // Show active filters in the header. Default: true
+    themeColor?: string; // Primary color (hex) for styling PDF/Print headers. Default: active UI theme color
+    customMeta?: Record<string, string>; // Extra custom metadata key-value pairs to display
+    pageSize?: 'a3' | 'a4' | 'a5' | 'letter' | 'legal'; // default: 'a4'
+    orientation?: 'portrait' | 'landscape'; // default: 'portrait' (or landscape dynamically based on column count)
+    margin?:
+        | number
+        | { top?: number; bottom?: number; left?: number; right?: number }; // Page margin in mm. Default: 14
+    cellPadding?: number; // Table cell padding. Default: 2.5
+    showSerial?: boolean; // Prepend serial number column (SL). Default: false
+    align?: 'left' | 'right'; // Explicit positioning of export buttons: 'left' | 'right' (default: 'right')
+    repeatHeader?: boolean; // default: false (show header only on the first page of PDF exports)
+    printPosition?: 'first' | 'last'; // default: 'last' (render standalone Print button first or last relative to PDF/Excel/CSV dropdown/group)
+    activeOnlyOnData?: boolean; // Only active based on data availability
+    indentColumns?: string[]; // Columns to indent based on hierarchy (depth)
+    indentCondition?: ((row: any, col?: any) => boolean | number) | undefined; // Condition/depth provider for indentation
+
+    ui?: ExportUiConfig;
+    document?: ExportDocumentConfig;
+    logoPath?: string;
+    /**
+     * Extra entries for the Export menu beside PDF / Excel / CSV (e.g. "Email on a schedule"). Each is an ordinary
+     * custom action (form fields, onClick, permission, icon); nothing is shown unless a module lists one here. The
+     * action's `row` is the list's current filters (search, dates, custom filters), so its form can prefill from them.
+     */
+    customActions?: CustomAction[];
+}
+
+export interface ImportConfig {
+    enabled: boolean;
+    /**
+     * The server importer's registry key (`/import/{importer}/...`). The importer owns the columns,
+     * rules and lookups, so this page config never restates them.
+     */
+    importer?: string;
+    /** Permission needed to import. Falls back to the module's create permission. */
+    permission?: string;
+    maxFileSize?: number; // in MB, default 10
+    /** @deprecated superseded by `importer`; kept so older configs still type-check. */
+    endpoint?: string;
+    /** @deprecated the template is generated from the importer's columns. */
+    templateUrl?: string;
+    /** @deprecated */
+    acceptedFormats?: string[];
+    /** @deprecated */
+    requiredColumns?: string[];
+    /** @deprecated */
+    columnMapping?: Record<string, string>;
+    /** @deprecated */
+    validationRules?: Record<string, any>;
+}
+
+export type FileFieldType = 'file' | 'image' | 'avatar';
+
+export interface FileFieldConfig {
+    maxSize?: number; // in MB
+    maxFiles?: number;
+    accept?: string; // MIME types or extensions
+    multiple?: boolean;
+    preview?: boolean;
+    uploadEndpoint?: string;
+    storagePath?: string;
+}
+
+export interface BadgeConfig {
+    label: string;
+    variant:
+        'default' | 'secondary' | 'destructive' | 'outline' | 'ghost' | string;
+    icon?: UiComponent;
+    class?: string;
+}
+
+export interface BadgeConfigDetails {
+    colorMap?: Record<string | number, string>;
+    variantMap?: Record<
+        string | number,
+        'default' | 'success' | 'warning' | 'danger' | 'info' | string
+    >;
+}
+
+export interface ColumnConfig {
+    key: string;
+    label: string;
+    align?: 'left' | 'center' | 'right';
+    size?: SwitchSize;
+    type?:
+        | 'text'
+        | 'avatar'
+        | 'badge'
+        | 'status'
+        | 'custom'
+        | 'select'
+        | 'actions'
+        | 'component'
+        | 'switch'
+        | 'boolean';
+    variant?:
+        'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'danger';
+    sticky?: boolean | 'left' | 'right';
+    sortable?: boolean;
+    permission?: string;
+    disabled?: boolean | ((row: any) => boolean);
+    readonly?: boolean | ((row: any) => boolean);
+    isChecked?: boolean | ((row: any) => boolean); // Force switch checked state (overrides database value)
+    switchConfig?: SwitchColumnConfig;
+    badgeConfig?: Record<any, BadgeConfig> | BadgeConfigDetails;
+    wrapped?: boolean; // constrain max-width so badge arrays wrap
+    hidden?: boolean; // initially hidden in the table, can be toggled
+    hiddenOnMobile?: boolean;
+    exportKey?: string; // key to extract if value is an object
+    exportValue?: (val: any, row: any) => string;
+    render?: (row: any, theme?: any, density?: any) => any;
+}
+
+export interface SwitchColumnConfig {
+    onValue?: any;
+    offValue?: any;
+    onLabel?: string;
+    offLabel?: string;
+}
+
+// Sizes follow Tailwind's own scale and are resolved in one place, utils/sizing.ts.
+/** A control size: `xs` … `7xl`, or Tailwind classes applied as given (`h-12 text-xl`, `h-10 md:h-14`). */
+export type InputSize = SizeValue;
+/** A dialog width: Tailwind's container scale (`3xs` … `7xl`), `full`, `screen`, or raw classes (`max-w-[60rem]`). */
+export type DialogSize = DialogWidthToken | (string & {});
+/**
+ * A field or group width on the 12-column form grid: any fraction (`1/2`, `1/3`, `5/12`, `1/6`, `2/5` …), `full`,
+ * or raw `col-*` classes as given.
+ */
+export type GridWidth =
+    | 'full'
+    | '1/2'
+    | '1/3'
+    | '2/3'
+    | '1/4'
+    | '3/4'
+    | '1/5'
+    | '2/5'
+    | '3/5'
+    | '4/5'
+    | '1/6'
+    | '5/6'
+    | '1/12'
+    | '2/12'
+    | '3/12'
+    | '4/12'
+    | '5/12'
+    | '6/12'
+    | '7/12'
+    | '8/12'
+    | '9/12'
+    | '10/12'
+    | '11/12'
+    | (string & {});
+/** A switch size: `xs` … `7xl`; raw classes use the token nearest their height. */
+export type SwitchSize = SizeValue;
+export type DensityType = 'compact' | 'normal' | 'relaxed';
+
+export type FormEventEffect =
+    FormEventAction | ((value: any, form: any, event: any) => void);
+
+// Lets a vue-select field offer an inline "+" to create a missing related record,
+// reusing the target module's own getConfig()/formFields/create endpoint.
+export interface QuickCreateConfig {
+    getConfig: () => ModuleConfig | Promise<ModuleConfig>; // lazy import — only loaded when "+" is clicked
+    title?: string; // defaults to the target's own "Create {module}" title
+    dialogSize?: DialogSize; // defaults to the target's own create dialog size
+}
+
+export interface FormField {
+    name?: string;
+    relationName?: string; // Custom relation name for mapping full objects (e.g. for assigned_to -> assignee)
+    label?: string;
+    type:
+        | 'alert'
+        | 'text'
+        | 'email'
+        | 'number'
+        | 'password'
+        | 'hidden'
+        | 'select'
+        | 'radio'
+        | 'textarea'
+        | 'date'
+        | 'time'
+        | 'datetime-local'
+        | 'url'
+        | 'tel'
+        | 'file'
+        | 'image'
+        | 'avatar'
+        | 'switch'
+        | 'vue-select'
+        | 'checkbox'
+        | 'check-all'
+        | 'icon-picker'
+        | 'rich-text'
+        | 'key-value'
+        | 'component'; // Render an arbitrary Vue component in place of a normal field
+    component?: UiComponent; // Used with type: 'component' — the component to render
+    componentProps?:
+        | Record<string, any>
+        | ((row: any, form: any) => Record<string, any>); // Extra props passed to `component`
+    showSelectAll?: boolean;
+    showLabel?: boolean; // Toggle label visibility (default true, but false for some types like check-all)
+    showBorder?: boolean; // Toggle border visibility (default true for check-all)
+    skipSubmit?: boolean;
+    group?: string;
+    targetGroup?: string;
+    title?: string;
+    class?: string;
+    bodyClass?: string;
+    fields?: FormField[];
+    placeholder?: string;
+    /** Muted helper line under the input (a translation key or plain text); replaced by the error while one is showing. */
+    hint?: string;
+    keyPlaceholder?: string;
+    valuePlaceholder?: string;
+    addActionText?: string;
+    keyOptions?:
+        string[] | ((isEditing: boolean, row: any, context?: any) => string[]); // Suggested key names (autocomplete) for key-value fields — static list or resolved from the current row
+    showSerial?: boolean;
+    autocomplete?: string;
+    required?:
+        boolean | ((isEditing: boolean, row: any, context?: any) => boolean);
+    disabled?: boolean;
+    readonly?:
+        boolean | ((isEditing: boolean, row: any, context?: any) => boolean); // static or resolved from the current row (e.g. lock a field once a related value is set)
+    showInRow?: boolean;
+    labelWidth?: string;
+    inputWidth?: string; // Custom width for the input element (e.g. '50px', '100px')
+    min?: number | string;
+    max?: number | string;
+    step?: string | number; // native number-input step; without it a decimal quantity is rejected (browser assumes 1)
+    // Static array, or (authored with `as any`) a `(isEditing, row, context) => options` function that
+    // GenericForm resolves against the live form data before the field reaches FormField — see GenericForm.vue.
+    // The field reaching FormField/ViewDetails always carries a resolved array, so the type stays array-only.
+    options?: Array<{ value: string; label: string } | string>;
+    multiple?: boolean;
+    taggable?: boolean;
+    defaultValue?: any;
+    getValue?: (row: any) => any; // Custom value extractor for edit mode (e.g. nested relations)
+    validation?: any;
+    icon?: UiComponent;
+    size?: InputSize | SwitchSize;
+    width?:
+        | GridWidth
+        | ((isEditing: boolean, row: any, context?: any) => GridWidth);
+    rows?: number;
+    cols?: number;
+    minHeight?: string; // Custom height for textarea and rich-text (e.g. '300px')
+    maxHeight?: string; // Custom max height for scrollable components (e.g. key-value)
+    toolbar?: 'essential' | 'minimal' | 'full';
+    className?: string;
+    orientation?: 'horizontal' | 'vertical';
+    fileConfig?: FileFieldConfig;
+    hideOnCreate?:
+        boolean | ((isEditing: boolean, row: any, context?: any) => boolean);
+    hideOnEdit?:
+        boolean | ((isEditing: boolean, row: any, context?: any) => boolean);
+    showOnlyOnCreate?:
+        boolean | ((isEditing: boolean, row: any, context?: any) => boolean);
+    showOnlyOnEdit?:
+        boolean | ((isEditing: boolean, row: any, context?: any) => boolean);
+    show?: boolean | ((isEditing: boolean, row: any, context?: any) => boolean);
+    switchConfig?: {
+        onValue?: any;
+        offValue?: any;
+        onLabel?: string;
+        offLabel?: string;
+    };
+    ajaxConfig?: {
+        endpoint: string;
+        method?: 'GET' | 'POST'; // default: 'GET'
+        searchParam?: string; // default: 'search'
+        resultsPath?: string; // default: 'data'
+        labelKey?: string | ((item: any) => string); // default: 'label'
+        valueKey?: string; // default: 'value'
+        renderOption?: (item: any) => string;
+        resetOnEmpty?: boolean; // Reset results when search is empty (default: true)
+        prefetch?: boolean; // Load data immediately on mount (default: false)
+        loadOnFocus?: boolean;
+        debounce?: number; // Custom debounce delay in ms (default: 300)
+        resetFields?: string[];
+        refetchOn?: string[]; // Field names whose change discards the loaded options so the next open re-queries
+        onSelect?: (item: any, form: any) => void;
+        onSelectAjax?: FormEventAction['ajaxConfig'];
+        params?: Record<string, any> | ((formData: any) => Record<string, any>); // additional static params or dynamic function
+        sortOrder?: 'id' | 'label' | 'none';
+        sortDirection?: 'asc' | 'desc';
+        maxVisibleOptions?: number;
+        quickCreate?: QuickCreateConfig;
+    };
+    onChange?: (value: any, form: any) => void;
+    lang?: string; // Force input locale (e.g. 'en-CA' for YYYY-MM-DD dates)
+    events?: {
+        onKeyUp?: FormEventEffect;
+        onKeyDown?: FormEventEffect;
+        onKeyPress?: FormEventEffect;
+        onFocus?: FormEventEffect;
+        onBlur?: FormEventEffect;
+        onInput?: FormEventEffect;
+        onChange?: FormEventEffect;
+    };
+}
+
+export interface FormEventAction {
+    handler?: (value: any, form: any, event: any) => void;
+    ajaxConfig?: {
+        endpoint: string;
+        method?: 'GET' | 'POST' | 'PUT' | 'PATCH';
+        params?:
+            | Record<string, any>
+            | ((formData: any, value: any) => Record<string, any>);
+        onSuccess?: (data: any, form: any) => void;
+        onError?: (error: any, form: any) => void;
+        condition?: (formData: any, value: any) => boolean;
+        enableReload?: boolean;
+    };
+    debounce?: number;
+}
+
+export interface SubModuleCrudTableColumn {
+    key: string;
+    label: string;
+    sortable?: boolean;
+    type?: 'text' | 'boolean' | 'badge' | 'switch';
+    badgeConfig?: {
+        colorMap?: Record<string | number, string>;
+        variantMap?: Record<
+            string | number,
+            'default' | 'success' | 'warning' | 'danger' | 'info'
+        >;
+    };
+    permission?: string;
+    isChecked?: boolean | ((row: any) => boolean);
+    switchConfig?: SwitchColumnConfig;
+    searchValue?: (row: any) => string;
+    render?: (row: any, index: number) => string | any;
+}
+
+// Renders a full sub-module CRUD panel inside a header-action dialog when set as a CustomAction's crudConfig.
+export interface SubModuleCrudConfig {
+    actionConfig?: ActionConfig;
+
+    /** GET endpoint — must return `{ data: any[] }` */
+    listEndpoint: string;
+
+    /** @deprecated Use actionConfig.create.endpoint */
+    createEndpoint?: string;
+    /** @deprecated Use actionConfig.update.endpoint */
+    updateEndpoint?: string;
+    /** @deprecated Use actionConfig.delete.endpoint */
+    deleteEndpoint?: string;
+
+    /** Columns for the compact list table */
+    tableColumns: SubModuleCrudTableColumn[];
+    /** Form fields for create / edit */
+    formFields: FormField[];
+    /** Label shown on the create / save button (default: 'Add') */
+    createLabel?: string;
+    /** Label shown on the update submit button (default: 'Update') */
+    updateLabel?: string;
+    /** Message shown when list is empty (default: 'No records found.') */
+    emptyLabel?: string;
+    /** When true, a `change` event is emitted after every mutation so the parent list can reload (default: true) */
+    reloadParentOnChange?: boolean;
+    /** Optional dialog size for create form (default: 'xl') */
+    createDialogSize?: DialogSize;
+    /** Optional dialog size for update form (default: 'xl') */
+    updateDialogSize?: DialogSize;
+    paginate?: boolean; // server-side pagination; endpoint must return {data, current_page, last_page, total, per_page}
+    /** Records per page when `paginate` is true (default: 10) */
+    perPage?: number;
+    /** Optional toast message overrides for CRUD operations */
+    messages?: {
+        createSuccess?: string;
+        createError?: string;
+        updateSuccess?: string;
+        updateError?: string;
+        deleteSuccess?: string;
+        deleteError?: string;
+        fetchError?: string;
+    };
+    /** @deprecated Use actionConfig[action].permission */
+    permissions?: {
+        create?: string;
+        update?: string;
+        delete?: string;
+    };
+    /** @deprecated Use actionConfig.create.show */
+    showCreate?: boolean;
+    /** @deprecated Use actionConfig.update.show */
+    showUpdate?: boolean;
+    /** @deprecated Use actionConfig.delete.show */
+    showDelete?: boolean;
+    /** @deprecated Use actionConfig.delete.confirmMessage */
+    confirmDeleteMessage?: (row: any) => string;
+    /** Enable exports (print, excel, csv, pdf) for the sub-module */
+    exportConfig?: ExportConfig | boolean;
+    /** Custom filters for the sub-module */
+    customFilters?: CustomFilter[];
+    /** Filter configuration (e.g. grouped popover) */
+    filterConfig?: FilterConfig;
+    /** Per-row custom action buttons, same shape as the main list's. */
+    customRowActions?: CustomAction[];
+    /** Optional override for the edit row-action icon. */
+    editIcon?: UiComponent;
+    /** Optional override for the delete row-action icon. */
+    deleteIcon?: UiComponent;
+}
+
+export interface CustomAction {
+    key: string;
+    label: string;
+    icon?: UiComponent;
+    endpoint?: string;
+    permission?: string;
+    confirmMessage?: string; // If present, confirmation will be shown
+    target?: '_blank' | '_self';
+    submitConfig?: (row: any | any[]) => {
+        url: string;
+        method?: 'POST' | 'PUT' | 'PATCH';
+        preserveScroll?: boolean;
+    }; // Integrated form submission (acts like Create/Edit)
+    onClick?: (row: any | any[], router: any, form?: any) => Promise<any>;
+    formFields?: FormFieldItem[] | ((row: any | any[]) => FormFieldItem[]); // accepts FormGroupNode items too, like ModuleConfig.formFields
+    submitLabel?: string;
+    hideFooter?: boolean;
+    hideSubmit?: boolean;
+    variant?: 'default' | 'destructive' | 'outline' | 'ghost';
+    dialogSize?: DialogSize;
+    show?: boolean | ((row: any, parentRow?: any) => boolean);
+    loadForm?: (row: any | any[]) => {
+        url: string;
+        method?: string;
+        preserveScroll?: boolean;
+    };
+    dnd?: boolean;
+    validation?: (rows: any[]) => { isValid: boolean; message?: string }; // Validate selected rows for bulk action
+    crudConfig?: SubModuleCrudConfig; // Enables full sub-module CRUD panel mode in header button dialogs
+    renderInDialog?: boolean; // When true, fetch the URL returned by onClick and render the HTML response directly inside the dialog (no navigation, no iframe)
+    component?: UiComponent;
+    componentProps?: Record<string, any> | ((row: any) => Record<string, any>);
+    showLabel?: boolean; // Render label next to icon when displayed as standalone action
+    position?: 'dropdown' | 'standalone'; // default: dropdown
+    preventToast?: boolean; // When true, suppresses the automatic success toast after onClick resolves
+    reloadParentOnChange?: boolean;
+    autoOpenAfterCreate?: boolean; // Auto-open this action's dialog for the just-created row (see ModuleManager's `autoOpenActionForId` prop)
+}
+
+export interface CustomFilter {
+    key: string;
+    label: string;
+    icon?: UiComponent;
+    options?: Array<{ value: any; label: string }>;
+    defaultValue?: string;
+    type?: 'select' | 'vue-select';
+    ajaxConfig?: FormField['ajaxConfig'];
+    placeholder?: string;
+    className?: string;
+    multiple?: boolean;
+    hideLabelOnSelect?: boolean;
+    /**
+     * Count this filter in the "applied filters" badge (default true). Set false for a filter that is the
+     * screen's mandatory context rather than something the user opted into — e.g. a required branch picker
+     * that always holds a value, which would otherwise make the Filters button read "1" permanently.
+     */
+    countAsFilter?: boolean;
+}
+
+export interface ApiConfig {
+    list?: string;
+    create: string;
+    update: string;
+    delete: string;
+    bulkDelete?: string;
+}
+
+export interface PermissionsConfig {
+    view: string;
+    create: string;
+    update: string;
+    delete: string;
+    export: string;
+}
+
+export interface ActionSettings {
+    show?: boolean | ((row: any, parentRow?: any) => boolean);
+    icon?: UiComponent;
+    dialogueSize?: DialogSize;
+    permission?: string;
+    endpoint?: string;
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    params?: Record<string, any>;
+    confirmMessage?: string | ((row: any) => string);
+    messages?: {
+        success?: string; // Custom success toast message
+        error?: string; // Custom error toast message
+        warning?: string; // Custom warning toast message
+    };
+    addMore?: boolean | 'confirm' | string[]; // Keep dialog open after creation (true, 'confirm', or array of fields to persist)
+}
+
+export interface ActionConfig {
+    create?: ActionSettings;
+    edit?: ActionSettings;
+    update?: ActionSettings; // Alias for edit
+    delete?: ActionSettings;
+    view?: ActionSettings; // List/Table visibility
+    detailsView?: ActionSettings; // Row details visibility
+    bulkDelete?: ActionSettings;
+    export?: ActionSettings;
+}
+
+// A grid card slot value: a plain row field name, or a function for derived/combined values.
+export type GridValueResolver = string | ((row: any) => any);
+
+// A grid card field. Defaults to reusing the matching tableColumns entry's type/render/badgeConfig;
+// `render` overrides for the grid only, independent of the table column.
+export interface GridFieldConfig {
+    key: string;
+    label?: string;
+    render?: (row: any) => any;
+    valueClass?: string; // plain-text values only — a vnode/badge renderer controls its own classes
+    labelClass?: string;
+}
+
+export type GridFieldRef = string | GridFieldConfig;
+
+export function gridFieldKey(ref: GridFieldRef): string {
+    return typeof ref === 'string' ? ref : ref.key;
+}
+
+// Card-grid alternative to the table layout (ModuleConfig.gridConfig). fieldKeys narrows which
+// fields are eligible in the card body — visibility is still gated by the table's own Columns toggle.
+export interface GridViewConfig {
+    /** Set true to enable the Table/Grid toggle for this module. Default: false. */
+    enabled?: boolean;
+    /** Which layout renders on first load. Default: 'table'. */
+    defaultLayout?: 'table' | 'grid';
+    /** Minimum card width — cards auto-fill the row via CSS grid. Default: '200px'. */
+    minCardWidth?: string;
+    /** Extra Tailwind classes applied to each card. */
+    cardClass?: string;
+
+    /** Row field (or resolver) holding the card image URL. */
+    imageKey?: GridValueResolver;
+    /** Image shown when `imageKey` resolves to an empty value. */
+    imageFallback?: string;
+    /** Tailwind aspect-ratio class for the image slot. Default: 'aspect-[4/3]'. */
+    imageAspect?: string;
+    /** Extra Tailwind classes on the `<img>` element itself (e.g. object-position). */
+    imageClass?: string;
+
+    /** Row field (or resolver) rendered as the card title. */
+    titleKey: GridValueResolver;
+    /** Extra Tailwind classes on the title element. */
+    titleClass?: string;
+    /** Row field (or resolver) rendered as the muted subtitle under the title. */
+    subtitleKey?: GridValueResolver;
+    /** Extra Tailwind classes on the subtitle element. */
+    subtitleClass?: string;
+
+    /** Fields rendered as small badges next to the title (e.g. status). */
+    badgeKeys?: GridFieldRef[];
+    /** Extra Tailwind classes on the badge row's container. */
+    badgesClass?: string;
+
+    fieldKeys?: GridFieldRef[]; // defaults to every tableColumns entry not used elsewhere and not select/actions
+    /** Extra Tailwind classes on the body-fields container. */
+    fieldsClass?: string;
+
+    /** Fields rendered prominently in the card footer (e.g. price). */
+    footerKeys?: GridFieldRef[];
+    /** Extra Tailwind classes on the footer container. */
+    footerClass?: string;
+}
+
+export interface ViewFieldsConfig {
+    showAll?: boolean;
+    fields?: string[];
+    except?: string[];
+    format?: Array<{
+        key: string;
+        data: string | ((row: any) => any);
+        type?: 'text' | 'date' | 'badge' | 'html';
+    }>;
+}
+
+export interface FilterConfig {
+    group?: boolean;
+    groupTitle?: string;
+    align?: 'left' | 'right';
+}
+
+export interface FormGroupNode {
+    type: 'group'; // discriminator
+    title?: string; // omit for no header
+    width?: GridWidth; // default 'full'
+    card?: boolean; // false renders fields with no card chrome (border/background/title)
+    class?: string; // card wrapper classes
+    bodyClass?: string; // card body wrapper classes
+    theme?: string; // overrides the form's global theme for this group's card + fields
+    headerOffset?: boolean; // top-pads a card:false group to align with a sibling titled card's body
+    fields: FormFieldItem[];
+    show?: boolean | ((isEditing: boolean, row: any, context?: any) => boolean);
+    hideOnCreate?:
+        boolean | ((isEditing: boolean, row: any, context?: any) => boolean);
+    hideOnEdit?:
+        boolean | ((isEditing: boolean, row: any, context?: any) => boolean);
+    showOnlyOnCreate?:
+        boolean | ((isEditing: boolean, row: any, context?: any) => boolean);
+    showOnlyOnEdit?:
+        boolean | ((isEditing: boolean, row: any, context?: any) => boolean);
+}
+
+// A formFields array item — either a plain field or a group node; narrow with isGroupNode().
+export type FormFieldItem = FormField | FormGroupNode;
+
+export function isGroupNode(item: FormFieldItem): item is FormGroupNode {
+    return (item as FormGroupNode).type === 'group';
+}
+
+// Recursively flattens FormFieldItem[] into a plain FormField[] for init/validation.
+export function flattenFormFields(items: FormFieldItem[]): FormField[] {
+    return items.flatMap((item) =>
+        isGroupNode(item) ? flattenFormFields(item.fields) : [item],
+    );
+}
+
+export interface ModuleConfig {
+    moduleName: string;
+    /**
+     * Show the store's own fields flagged "show on list" (Administration > Custom Fields) as extra columns. `entity` is the
+     * record type; `values` reads a row's answers (default `row.custom_values`). Nothing is added when none are flagged.
+     */
+    customFields?: { entity: string; values?: (row: any) => Record<string, any> | null | undefined };
+    icon?: UiComponent | string; // a framework component, or a plain Lucide icon name string (e.g. from the DB)
+    /** Short line shown under the title in ModuleHeader.vue. Plain text or a resolveLabel() key. */
+    description?: string;
+    tableColumns: ColumnConfig[];
+    formFields: FormFieldItem[]; // plain fields and/or FormGroupNode group nodes, freely mixed
+    /** @deprecated — inline FormGroupNode items inside formFields instead */
+    formGroup?: { title: string; fields: string[]; width?: GridWidth }[];
+    /** @deprecated Use actionConfig[action].endpoint */
+    api?: ApiConfig;
+    /** @deprecated Use actionConfig[action].permission */
+    permissions?: PermissionsConfig;
+    importConfig?: ImportConfig;
+    exportConfig?: ExportConfig;
+    customHeaderActions?: CustomAction[];
+    customRowActions?: CustomAction[];
+    customBulkActions?: CustomAction[];
+    customFilters?: CustomFilter[];
+    filterConfig?: FilterConfig;
+    enableDateFilter?: boolean;
+    disableRowClick?: boolean;
+    onRowClick?: (row: any, router: any) => void;
+    formInputSize?: InputSize;
+    createDialogSize?: DialogSize;
+    editDialogSize?: DialogSize;
+    formGridColumns?: number;
+    dataPropName: string;
+    extraPropsToRefresh?: string[];
+    actionConfig?: ActionConfig;
+    /** @deprecated Use actionConfig.create.icon */
+    createIcon?: UiComponent;
+    /** @deprecated Use actionConfig.edit.icon */
+    editIcon?: UiComponent;
+    /** @deprecated Use actionConfig.delete.icon */
+    deleteIcon?: UiComponent;
+    /** @deprecated Use actionConfig.view.icon */
+    viewIcon?: UiComponent;
+    viewFields?: ViewFieldsConfig;
+    transformData?: (data: any[]) => any[];
+    /** Opts this module into the Table/Grid layout toggle. See `GridViewConfig`. */
+    gridConfig?: GridViewConfig;
+}
+
+export interface PaginationData {
+    data: any[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    per_page?: number;
+}
+
+export interface FilterState {
+    search?: string;
+    status?: string;
+    date_from?: string;
+    date_to?: string;
+    sort?: string;
+    direction?: 'asc' | 'desc';
+    page?: number;
+    perPage?: number;
+    [key: string]: any;
+}
+
+export interface DateRangeState {
+    from: Date | null;
+    to: Date | null;
+}
+
+export interface SortConfig {
+    key: string | null;
+    direction: 'asc' | 'desc';
+}
+
+export interface CustomActionDialogState {
+    isOpen: boolean;
+    action: CustomAction | null;
+    row: any | any[] | null;
+    isLoading?: boolean;
+    componentKey?: number; // Component key to force re-render/re-mount
+    dynamicContent?: {
+        type: 'fields' | 'html' | 'component';
+        data: any;
+        component?: UiComponent;
+    };
+}
+
+export interface DensityConfig {
+    buttonSize: string;
+    buttonPadding: string;
+    gap: string;
+    textSize: string;
+    cellPadding: string;
+    headerPadding: string;
+    avatarSize: string;
+    fontSize: string;
+    badgePadding: string;
+}
+
+export interface FormData {
+    [key: string]: any;
+}
+
+export interface FormErrors {
+    [key: string]: string;
+}
+
+export interface SwitchColumnConfig {
+    field?: string; // Field name to toggle (e.g., 'is_active', 'status'). Defaults to column key if omitted.
+    onLabel?: string; // Label for ON state (default: 'Active')
+    offLabel?: string; // Label for OFF state (default: 'Inactive')
+    onValue?: any; // Value when ON (default: true or 1 or 'Active')
+    offValue?: any; // Value when OFF (default: false or 0 or 'Inactive')
+    endpoint?: string; // Custom endpoint for toggle (default: uses update endpoint)
+    /** @deprecated Use ColumnConfig.variant instead */
+    variant?: 'primary' | 'success' | 'info' | 'warning' | 'danger';
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    params?: Record<string, any>;
+    onToggle?: (
+        row: any,
+        newValue: any,
+        router: any,
+    ) => Promise<boolean | void>;
+    permission?: string;
+    disabled?: boolean | ((row: any) => boolean);
+    readonly?: boolean | ((row: any) => boolean);
+    confirmToggle?: boolean; // Show confirmation before toggle (default: false)
+    confirmMessage?: (row: any, newValue: any) => string;
+    onUpdate?: (row: any, newValue: any) => void; // Callback after successful endpoint request
+}

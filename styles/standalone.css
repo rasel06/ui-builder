@@ -1,0 +1,6 @@
+/* Entry for dist/ui-builder.css, the pre-built file for a host WITHOUT Tailwind. No preflight (no reset
+   fighting the host's own styles); only the classes ui-builder itself uses. */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
+@import './source.css';
